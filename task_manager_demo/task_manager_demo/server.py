@@ -19,6 +19,7 @@ from storage import TaskNotFound, TaskRepository
 
 
 print("Starting task dashboard server...")
+print("Python version:", ".".join(str(x) for x in (Path(__file__).parent.parent / "pyproject.toml").read_text().splitlines()[0].split()[1].split(".")))
 BASE_DIR = Path(__file__).resolve().parent
 MAX_BODY_BYTES = 64 * 1024
 
