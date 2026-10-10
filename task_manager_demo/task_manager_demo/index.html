@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Engineering Task Dashboard</title>
+  <style>
+    :root{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;color:#e9eefb;background:#0b1020;line-height:1.45}
+    *{box-sizing:border-box}body{margin:0}main{width:min(1150px,92%);margin:36px auto 70px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+    h1{font-size:clamp(1.7rem,3vw,2.4rem);margin:0}h2{font-size:1.15rem;margin:0 0 18px}
+    .muted{color:#9eabc4}.eyebrow{font-size:.8rem;letter-spacing:.15em;text-transform:uppercase;color:#76a7ff}
+    .button,button{border:0;border-radius:10px;background:#4677ed;color:white;padding:11px 16px;cursor:pointer;font:inherit;font-weight:600}
+    button:hover{filter:brightness(1.1)}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid #8ab4ff;outline-offset:3px}
+    button.secondary{background:#26344e}.danger{background:#a33c51}.small{font-size:.81rem;padding:8px 11px}
+    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:28px 0}
+    .stat,.panel,.task{background:#151e31;border:1px solid #28364f;border-radius:16px}
+    .stat{padding:20px}.stat strong{display:block;font-size:2rem;margin-top:7px}.stat span{color:#aab7cd;font-size:.9rem}
+    .panel{padding:22px;margin-top:18px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:19px}
+    input,select,textarea{background:#0e1728;border:1px solid #34445f;color:#edf3ff;border-radius:9px;padding:11px 12px;font:inherit;min-width:0}
+    .toolbar input{flex:2;min-width:190px}.toolbar select{flex:1;min-width:150px}
+    .tasks{display:grid;gap:11px}.task{padding:17px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start}
+    .task h3{margin:0 0 5px;font-size:1.02rem}.task p{margin:0 0 10px;color:#aab7cd;font-size:.9rem}
+    .task-meta,.task-actions{display:flex;align-items:center;flex-wrap:wrap;gap:9px}.task-actions{justify-content:flex-end}
+    .pill{font-size:.74rem;border-radius:999px;padding:4px 9px;background:#263853;color:#cee0fb}
+    .pill.high,.pill.urgent{background:#50334a;color:#ffb7cf}.pill.done{background:#1c493d;color:#a0f2cb}
+    .empty{text-align:center;padding:48px 20px;color:#aab7cd}.message{min-height:28px;margin-top:10px;color:#a4eacb}
+    dialog{width:min(520px,94vw);border:1px solid #34445f;background:#151e31;color:#e9eefb;border-radius:16px;padding:24px}
+    dialog::backdrop{background:rgba(0,0,0,.7)}.form-grid{display:grid;gap:13px}.field{display:grid;gap:6px}
+    .field label{font-size:.85rem;color:#bac8de}.form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+    @media(max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}.task{grid-template-columns:1fr}.task-actions{justify-content:flex-start}}
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div><div class="eyebrow">Local Python + JSON app</div><h1>Engineering Task Dashboard</h1><p class="muted">Organize priorities, track progress, and manage project tasks.</p></div>
+      <button id="addBtn">+ Add task</button>
+    </header>
+    <section class="stats" aria-label="Task summary">
+      <div class="stat"><span>Total tasks</span><strong id="total">—</strong></div>
+      <div class="stat"><span>In progress</span><strong id="progress">—</strong></div>
+      <div class="stat"><span>Completed</span><strong id="completed">—</strong></div>
+      <div class="stat"><span>Overdue</span><strong id="overdue">—</strong></div>
+    </section>
+    <section class="panel">
+      <h2>All tasks</h2>
+      <div class="toolbar">
+        <input id="search" aria-label="Search tasks" placeholder="Search title, description, owner, tags...">
+        <select id="statusFilter" aria-label="Filter by status"><option value="">All statuses</option><option value="todo">To do</option><option value="in_progress">In progress</option><option value="blocked">Blocked</option><option value="done">Done</option></select>
+        <select id="priorityFilter" aria-label="Filter by priority"><option value="">All priorities</option><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="urgent">Urgent</option></select>
+        <button class="secondary" id="refreshBtn">Refresh</button>
+      </div>
+      <div id="tasks" class="tasks" aria-live="polite"></div>
+      <div id="message" class="message" role="status"></div>
+    </section>
+  </main>
+  <dialog id="editor">
+    <form id="taskForm">
+      <h2 id="dialogTitle">Add task</h2>
+      <div class="form-grid">
+        <div class="field"><label for="title">Title *</label><input id="title" required maxlength="150"></div>
+        <div class="field"><label for="description">Description</label><textarea id="description" rows="3" maxlength="2000"></textarea></div>
+        <div class="field"><label for="assignee">Assignee</label><input id="assignee" maxlength="100"></div>
+        <div class="field"><label for="status">Status</label><select id="status"><option value="todo">To do</option><option value="in_progress">In progress</option><option value="blocked">Blocked</option><option value="done">Done</option></select></div>
+        <div class="field"><label for="priority">Priority</label><select id="priority"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option><option value="urgent">Urgent</option></select></div>
+        <div class="field"><label for="due_date">Due date</label><input id="due_date" type="date"></div>
+        <div class="field"><label for="tags">Tags (comma separated)</label><input id="tags" placeholder="python, operations"></div>
+      </div>
+      <div class="form-actions"><button type="button" class="secondary" id="cancelBtn">Cancel</button><button type="submit" id="saveBtn">Save task</button></div>
+    </form>
+  </dialog>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const labels = {todo:'To do',in_progress:'In progress',blocked:'Blocked',done:'Done'};
+    let currentTasks = [];
+    let editingId = null;
+    let refreshTimer = null;
+
+    function showMessage(message, error = false) {
+      $('message').textContent = message;
+      $('message').style.color = error ? '#ffb2be' : '#a4eacb';
+    }
+
+    async function request(path, options = {}) {
+      const response = await fetch(path, {headers:{'Content-Type':'application/json'},...options});
+      let body;
+      try {body = await response.json();} catch {throw new Error('Server returned an invalid response');}
+      if (!response.ok) throw new Error(body.error || `HTTP ${response.status}`);
+      return body;
+    }
+
+    function element(tag, className = '', value = '') {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (value) node.textContent = value;
+      return node;
+    }
+
+    function makePill(value, variant = '') {
+      return element('span', `pill ${variant}`, value);
+    }
+
+    function taskCard(task) {
+      const article = element('article','task');
+      const content = element('div');
+      content.append(element('h3','',task.title));
+      if (task.description) content.append(element('p','',task.description));
+      const meta = element('div','task-meta');
+      meta.append(makePill(labels[task.status] || task.status,task.status));
+      meta.append(makePill(task.priority,task.priority));
+      if (task.assignee) meta.append(makePill('Owner: '+task.assignee));
+      if (task.due_date) meta.append(makePill('Due: '+task.due_date));
+      for (const tag of task.tags || []) meta.append(makePill('#'+tag));
+      content.append(meta);
+      const actions = element('div','task-actions');
+      const edit = element('button','secondary small','Edit');
+      edit.addEventListener('click',()=>openEditor(task));
+      const complete = element('button','secondary small',task.status==='done'?'Reopen':'Complete');
+      complete.addEventListener('click',()=>changeStatus(task,task.status==='done'?'todo':'done'));
+      const remove = element('button','danger small','Delete');
+      remove.addEventListener('click',()=>deleteTask(task));
+      actions.append(edit,complete,remove);
+      article.append(content,actions);
+      return article;
+    }
+
+    function renderTasks(tasks) {
+      $('tasks').replaceChildren();
+      if (!tasks.length) {
+        $('tasks').append(element('div','empty','No tasks found. Add one or try changing the filters.'));
+        return;
+      }
+      for (const task of tasks) $('tasks').append(taskCard(task));
+    }
+
+    async function loadTasks() {
+      try {
+        const params = new URLSearchParams();
+        if ($('search').value.trim()) params.set('q',$('search').value.trim());
+        if ($('statusFilter').value) params.set('status',$('statusFilter').value);
+        if ($('priorityFilter').value) params.set('priority',$('priorityFilter').value);
+        const [tasks, summary] = await Promise.all([
+          request('/api/tasks?'+params.toString()),request('/api/summary')
+        ]);
+        currentTasks = tasks.tasks;
+        renderTasks(currentTasks);
+        $('total').textContent = summary.total;
+        $('progress').textContent = summary.by_status.in_progress;
+        $('completed').textContent = summary.completed;
+        $('overdue').textContent = summary.overdue;
+        showMessage('');
+      } catch(error) {showMessage('Could not load tasks: '+error.message,true);}
+    }
+
+    function openEditor(task = null) {
+      editingId = task?.id || null;
+      $('dialogTitle').textContent = task?'Edit task':'Add task';
+      $('taskForm').reset();
+      $('title').value = task?.title || '';
+      $('description').value = task?.description || '';
+      $('assignee').value = task?.assignee || '';
+      $('status').value = task?.status || 'todo';
+      $('priority').value = task?.priority || 'medium';
+      $('due_date').value = task?.due_date || '';
+      $('tags').value = (task?.tags || []).join(', ');
+      $('editor').showModal();
+      $('title').focus();
+    }
+
+    async function saveTask(event) {
+      event.preventDefault();
+      const payload = {
+        title:$('title').value,description:$('description').value,
+        assignee:$('assignee').value,status:$('status').value,
+        priority:$('priority').value,due_date:$('due_date').value || null,
+        tags:$('tags').value.split(',').map(s=>s.trim()).filter(Boolean)
+      };
+      $('saveBtn').disabled = true;
+      try {
+        const path = editingId?'/api/tasks/'+encodeURIComponent(editingId):'/api/tasks';
+        await request(path,{method:editingId?'PATCH':'POST',body:JSON.stringify(payload)});
+        $('editor').close();
+        await loadTasks();
+        showMessage(editingId?'Task updated successfully.':'Task created successfully.');
+      } catch(error) {showMessage(error.message,true);}
+      finally {$('saveBtn').disabled = false;}
+    }
+
+    async function changeStatus(task,status) {
+      try {
+        await request('/api/tasks/'+encodeURIComponent(task.id),{method:'PATCH',body:JSON.stringify({status})});
+        await loadTasks();
+        showMessage('Task status changed.');
+      } catch(error) {showMessage(error.message,true);}
+    }
+
+    async function deleteTask(task) {
+      if (!confirm(`Delete "${task.title}"? This cannot be undone.`)) return;
+      try {
+        await request('/api/tasks/'+encodeURIComponent(task.id),{method:'DELETE'});
+        await loadTasks();
+        showMessage('Task deleted.');
+      } catch(error) {showMessage(error.message,true);}
+    }
+
+    $('addBtn').addEventListener('click',()=>openEditor());
+    $('cancelBtn').addEventListener('click',()=>$('editor').close());
+    $('taskForm').addEventListener('submit',saveTask);
+    $('refreshBtn').addEventListener('click',loadTasks);
+    $('statusFilter').addEventListener('change',loadTasks);
+    $('priorityFilter').addEventListener('change',loadTasks);
+    $('search').addEventListener('input',()=>{clearTimeout(refreshTimer);refreshTimer=setTimeout(loadTasks,250);});
+    loadTasks();
+  </script>
+</body>
+</html>

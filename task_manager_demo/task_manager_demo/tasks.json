@@ -1,0 +1,50 @@
+{
+  "project": "Engineering Team Task Dashboard",
+  "description": "Sample data for the local dashboard application.",
+  "tasks": [
+    {
+      "id": "task-001",
+      "title": "Review data pipeline alerts",
+      "description": "Check recent pipeline runs, investigate errors, and document follow-up actions.",
+      "status": "in_progress",
+      "priority": "high",
+      "assignee": "Priyanka",
+      "tags": [
+        "operations",
+        "monitoring"
+      ],
+      "due_date": "2026-10-15",
+      "created_at": "2026-10-06T14:00:00+00:00",
+      "updated_at": "2026-10-09T15:00:00+00:00"
+    },
+    {
+      "id": "task-003",
+      "title": "Update deployment documentation",
+      "description": "Write concise deployment and rollback instructions for the team.",
+      "status": "done",
+      "priority": "low",
+      "assignee": "Taylor",
+      "tags": [
+        "documentation"
+      ],
+      "due_date": "2026-10-08",
+      "created_at": "2026-10-03T12:00:00+00:00",
+      "updated_at": "2026-10-08T18:00:00+00:00"
+    },
+    {
+      "id": "task-004",
+      "title": "Resolve API access issue",
+      "description": "Coordinate missing permissions with the platform administrator.",
+      "status": "blocked",
+      "priority": "urgent",
+      "assignee": "Jordan",
+      "tags": [
+        "access",
+        "platform"
+      ],
+      "due_date": "2026-10-12",
+      "created_at": "2026-10-08T09:00:00+00:00",
+      "updated_at": "2026-10-09T11:00:00+00:00"
+    }
+  ]
+}
