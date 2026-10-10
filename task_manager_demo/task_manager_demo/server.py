@@ -17,14 +17,12 @@ from urllib.parse import parse_qs, urlsplit
 
 from storage import TaskNotFound, TaskRepository
 
-<<<<<<< HEAD
+
 print("Starting task dashboard server...")
 print ("yubraj shrestha")
-=======
-
 print("jdjdkf jsdsjfksjfks kdfjkd")
 print("Python version:", ".".join(str(x) for x in (Path(__file__).parent.parent / "pyproject.toml").read_text().splitlines()[0].split()[1].split(".")))
->>>>>>> a387ec8b11e9532518bc50565b906b13ccf216ca
+
 BASE_DIR = Path(__file__).resolve().parent
 MAX_BODY_BYTES = 64 * 1024
 
