@@ -18,7 +18,7 @@ from urllib.parse import parse_qs, urlsplit
 from storage import TaskNotFound, TaskRepository
 
 
-print("Starting task dashboard server...")
+print("jdjdkf jsdsjfksjfks kdfjkd")
 print("Python version:", ".".join(str(x) for x in (Path(__file__).parent.parent / "pyproject.toml").read_text().splitlines()[0].split()[1].split(".")))
 BASE_DIR = Path(__file__).resolve().parent
 MAX_BODY_BYTES = 64 * 1024
